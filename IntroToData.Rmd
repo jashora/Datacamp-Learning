@@ -1,0 +1,155 @@
+---
+title: "Introduction to Data"
+author: "jasleen Hora"
+date: "`r format(Sys.time(), '%F')`"
+# date: "[YYYY-MM-DD]<h6>_(Last updated `r (format(Sys.time(), '%F'))`)_</h6>"
+output:
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    theme: journal
+    fig_caption: yes
+    css: CSS/CSS code
+params:
+  version: 1.0.0
+---
+Dataset used: High School and Beyond
+We load the data using `data()` function 
+Structure of data: use `str()` or `glimpse()` function
+
+```{r setup, include=FALSE}
+# packages
+library(openintro)
+library(dplyr)
+library(ggplot2)
+
+# knitting options
+knitr::opts_chunk$set(cache = TRUE, warning = FALSE, message = FALSE)
+
+#parameters
+
+
+# if data files are needed, set to TRUE
+refresh_data <- FALSE
+```
+
+# Data
+
+```{r data}
+data("email50")
+
+# structure of data
+str(email50)
+
+# or
+glimpse(email50)
+```
+
+# Types of Variable
+1) Numerical or Quantitative
+  a) Continuous
+  b) Discrete
+2) Categorical or Qualitative
+  a) Ordinal
+  b) Nominal
+
+# Filtering based on a factor:
+Categorical data often stored as factors in R and are sometimes essential, sometimes undesirable.
+Common in subgroup analysis
+
+
+```{r factor }
+email50_big <- email50 %>%
+  filter(number == "big")
+
+glimpse(email50_big)
+
+table(email50_big$number)
+email50_big$number <- droplevels(email50_big$number)
+```
+
+# Discretize a continuous variable:
+```{r discrete}
+med_num_char <- median(email50$num_char)
+
+# creating vcategorical variable from continuos variable num_char
+email50_fortified<- email50 %>%
+  mutate(num_char_cat = ifelse(num_char < med_num_char, 'below median', 'at or above median'))
+
+# count emails in each category
+email50_fortified %>%
+  count(num_char_cat)
+```
+
+# Another way of discretizing a continuous variable 
+```{r}
+email50_fortified <- email50 %>%
+  mutate(number_yn = case_when(email50$number == "none" ~ "no",
+                               email50$number != "none" ~ "yes"))
+
+# Visualize number_yn
+ggplot(email50_fortified, aes(x = number_yn)) + 
+  geom_bar()
+```
+
+# Vizualizing Numerical Data: EDA
+Scatterplot is most common to visualizerelationship between 2 numerical data. Using ggplot2. It makes modern-looking hassle free plots that take care of legends. Easy to extend code to multivariate variables. It also is easy to program and read because of its Iterative Construction.
+
+# To check exclamation points in an email
+```{r}
+ggplot(email50, aes(x = num_char, y = exclaim_mess, color = factor(spam))) + 
+  geom_point()
+```
+
+# Observational Studies and Experiments
+1) Observationla Study:
+Collect data in a way that does not directly interfere with how that data arise. Only correlation(Association?) can be inferred.( Just observed tha samples , can't contribute to the hypothesis as all factors were not considered)
+
+2) Experimental Study:
+Randomly assign subjects to various treatments. Causation(Other confounding variables that contribute to the hypothesis were also considered as we did a sampling(random assignment)) can be inferred.
+
+# Random Sampling and Random Assignment
+Random Sample: Subjects are selected randomly from the populaion and studies from the results can be generalized to that population (GENERALIZED)
+Random Assignment: Allows for causal conclusion. Occurs only in experimental setings, where subjects are being assigned to various treatments.(CAUSAL) - only limited to that sample(causation)
+
+Even if the association is formed between explanatory variable and response variable doesn't mean a causal relationship. #Simpson's paradox: The inclusion of a 3rd variable can change the relationship between explanatory and response variable.
+
+# Sampling:
+1) Simple Random Sample
+2) Stratified Sample
+3) Cluster Sample
+4) Multistage Sample
+
+# Principles of Experimental Design
+1) Control: compare treatment of interest to a control group
+2) randomize: randomly assign subjects to treatments
+3) Replicate: collect a sufficiently large sample within a study, or replicate the entire study
+4) Block: account for potential effect of known or suspected confounding variables. 
+  Group subjects into blocks based on these variables
+  Randomize within each block to treatment groups
+
+```{r}
+library(gapminder)
+library(dplyr)
+
+data("gapminder")
+
+glimpse(gapminder) # Observational
+
+gapminder_counts <- gapminder %>%
+  count(country, continent) # can use count() or group_by()
+
+#ucb_admission_counts %>%
+  group_by(Gender) %>%
+  mutate(prop = n/sum(n)) %>%
+  filter(Admit == "Admitted")
+  
+#ucb_admission_counts %>%
+  group_by(Dept, Gender) %>%
+  mutate(prop = n/sum(n)) %>%
+  filter(Gender == "Male" & Admit == "Admitted")
+
+```
+
+
